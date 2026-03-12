@@ -1,6 +1,6 @@
 
 
-````md
+
 # AI Math Tutor
 
 一个基于 **Vue3 + TypeScript + FastAPI + LLM** 的 AI 数学辅导系统，面向学生、老师和家长的数学练习与学习分析场景。
