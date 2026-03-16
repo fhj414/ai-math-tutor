@@ -111,3 +111,20 @@ class KnowledgeGraphItem(BaseModel):
 class KnowledgeGraphResponse(BaseModel):
     student_id: int
     items: List[KnowledgeGraphItem]
+
+class PaperQuestionItem(BaseModel):
+    question: str
+    answer: str
+    steps: List[str]
+
+
+class GeneratePaperRequest(BaseModel):
+    knowledge_point: str
+    count: int = 10
+    difficulty: str = "中等"
+
+
+class GeneratePaperResponse(BaseModel):
+    knowledge_point: str
+    difficulty: str
+    questions: List[PaperQuestionItem]

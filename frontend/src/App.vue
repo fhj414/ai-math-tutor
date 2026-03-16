@@ -210,6 +210,17 @@
 
 </template>
 
+<PaperPanel
+  v-else-if="activeTab === 'paper'"
+  v-model:knowledgePoint="paperKnowledgePoint"
+  v-model:count="paperCount"
+  v-model:difficulty="paperDifficulty"
+  :loading="paperLoading"
+  :paper="generatedPaper"
+  @generate="handleGeneratePaper"
+  @export="handleExportPaper"
+/>
+
       <template v-else>
         <div v-if="suggestionLoading" class="empty">学习建议加载中...</div>
 
@@ -288,13 +299,18 @@ import {
   rebuildKnowledgeGraph,
   type KnowledgeGraphResponse,
   rebuildRagIndex,
-  getLearningPath
+  getLearningPath,
+  generatePaper,
+  getExportPaperUrl,
+type GeneratePaperResponse,
 } from './api/math'
+import PaperPanel from './components/PaperPanel.vue'
+
 const question = ref('')
 const loading = ref(false)
 const result = ref<(SolveResponse & { question: string }) | null>(null)
 
-const activeTab = ref<'solve' | 'history' | 'wrong' | 'report' | 'suggestion' | 'graph'>('solve')
+const activeTab = ref<'solve' | 'history' | 'wrong' | 'report' | 'suggestion' | 'graph' | 'path' | 'paper'>('solve')
 const historyList = ref<HistoryItem[]>([])
 const wrongList = ref<HistoryItem[]>([])
 const imageLoading = ref(false)
@@ -320,6 +336,12 @@ const knowledgeGraph = ref<KnowledgeGraphResponse | null>(null)
 const learningPath = ref<any[]>([])
 const pathLoading = ref(false)
 
+const paperKnowledgePoint = ref('')
+const paperCount = ref(10)
+const paperDifficulty = ref('中等')
+const paperLoading = ref(false)
+const generatedPaper = ref<GeneratePaperResponse | null>(null)
+
 const handleTabChange = async (
   tab: 'solve' | 'history' | 'wrong' | 'report' | 'suggestion' | 'graph'
 ) => {
@@ -337,7 +359,9 @@ const handleTabChange = async (
     await loadKnowledgeGraph()
   }else if (tab === 'path') {
   await loadLearningPath()
- }
+ }else if (tab === 'paper') {
+  activeTab.value = 'paper'
+}
 }
 
 const handleGenerateWeakPractice = async (knowledgeName: string) => {
@@ -641,6 +665,56 @@ const loadLearningPath = async () => {
 
     pathLoading.value = false
   }
+}
+
+const handleGeneratePaper = async () => {
+  if (!paperKnowledgePoint.value.trim()) return
+
+  paperLoading.value = true
+  try {
+    const { data } = await generatePaper(
+      paperKnowledgePoint.value,
+      paperCount.value,
+      paperDifficulty.value,
+    )
+    generatedPaper.value = data
+  } catch (error: any) {
+    console.error('生成试卷失败:', error)
+    alert(error?.response?.data?.detail || '生成试卷失败')
+  } finally {
+    paperLoading.value = false
+  }
+}
+
+const handleExportPaper = async () => {
+  if (!paperKnowledgePoint.value.trim()) {
+    alert('请先输入知识点')
+    return
+  }
+
+  const url = getExportPaperUrl()
+  const form = document.createElement('form')
+  form.method = 'POST'
+  form.action = url
+  form.target = '_blank'
+
+  const fields = {
+    knowledge_point: paperKnowledgePoint.value,
+    count: String(paperCount.value),
+    difficulty: paperDifficulty.value,
+  }
+
+  Object.entries(fields).forEach(([key, value]) => {
+    const input = document.createElement('input')
+    input.type = 'hidden'
+    input.name = key
+    input.value = value
+    form.appendChild(input)
+  })
+
+  document.body.appendChild(form)
+  form.submit()
+  document.body.removeChild(form)
 }
 
 onMounted(async () => {

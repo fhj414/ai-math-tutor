@@ -50,6 +50,10 @@ from app.knowledge_graph_service import (
 from app.schemas import KnowledgeGraphResponse
 from app.learning_path_service import generate_learning_path
 
+from app.paper_service import generate_paper
+from app.schemas import GeneratePaperRequest, GeneratePaperResponse
+from fastapi import Query, Depends, HTTPException, File, UploadFile, Form
+
 Base.metadata.create_all(bind=engine)
 ensure_index_ready()
 
@@ -563,5 +567,110 @@ def get_learning_path(
             "path": path
         }
 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/generate-paper", response_model=GeneratePaperResponse)
+def generate_paper_api(req: GeneratePaperRequest):
+    try:
+        result = generate_paper(req.knowledge_point, req.count,
+                                req.difficulty)
+        return GeneratePaperResponse(**result)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+@app.post("/api/export/paper", response_class=HTMLResponse)
+def export_paper_html(
+    knowledge_point: str = Form(...),
+    count: int = Form(10),
+    difficulty: str = Form("中等"),
+):
+    try:
+        result = generate_paper(knowledge_point, count, difficulty)
+
+        questions_html = ""
+        for idx, item in enumerate(result["questions"], start=1):
+            steps_html = "".join([f"<li>{step}</li>" for step in item["steps"]])
+            questions_html += f"""
+            <div class="card">
+              <h3>第 {idx} 题</h3>
+              <p><strong>题目：</strong>{item['question']}</p>
+              <p><strong>答案：</strong>{item['answer']}</p>
+              <div>
+                <strong>解析：</strong>
+                <ol>{steps_html}</ol>
+              </div>
+            </div>
+            """
+
+        html = f"""
+        <!DOCTYPE html>
+        <html lang="zh-CN">
+        <head>
+          <meta charset="UTF-8" />
+          <title>{result['knowledge_point']} - 练习卷</title>
+          <style>
+            body {{
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+              margin: 0;
+              padding: 24px;
+              color: #222;
+              background: #f7f8fa;
+            }}
+            .container {{
+              max-width: 960px;
+              margin: 0 auto;
+              background: #fff;
+              padding: 32px;
+              border-radius: 16px;
+            }}
+            .print-bar {{
+              margin-bottom: 24px;
+            }}
+            .print-btn {{
+              padding: 10px 16px;
+              border: none;
+              background: #18a058;
+              color: #fff;
+              border-radius: 8px;
+              cursor: pointer;
+            }}
+            .card {{
+              background: #fafafa;
+              border-radius: 12px;
+              padding: 16px;
+              margin-bottom: 16px;
+            }}
+            @media print {{
+              body {{
+                background: #fff;
+                padding: 0;
+              }}
+              .container {{
+                max-width: none;
+                border-radius: 0;
+                padding: 0;
+              }}
+              .print-bar {{
+                display: none;
+              }}
+            }}
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="print-bar">
+              <button class="print-btn" onclick="window.print()">打印 / 保存为 PDF</button>
+            </div>
+
+            <h1>{result['knowledge_point']} 专项练习卷</h1>
+            <p><strong>难度：</strong>{result['difficulty']}</p>
+            <p><strong>题量：</strong>{len(result['questions'])}</p>
+
+            {questions_html}
+          </div>
+        </body>
+        </html>
+        """
+        return html
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

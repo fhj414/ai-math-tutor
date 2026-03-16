@@ -196,3 +196,31 @@ export function getLearningPath(student_id: number) {
     params: { student_id },
   });
 }
+
+export interface PaperQuestionItem {
+  question: string;
+  answer: string;
+  steps: string[];
+}
+
+export interface GeneratePaperResponse {
+  knowledge_point: string;
+  difficulty: string;
+  questions: PaperQuestionItem[];
+}
+
+export function generatePaper(
+  knowledge_point: string,
+  count = 10,
+  difficulty = "中等",
+) {
+  return request.post<GeneratePaperResponse>("/api/generate-paper", {
+    knowledge_point,
+    count,
+    difficulty,
+  });
+}
+
+export function getExportPaperUrl() {
+  return "http://127.0.0.1:8000/api/export/paper";
+}
