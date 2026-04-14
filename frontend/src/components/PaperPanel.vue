@@ -34,6 +34,15 @@
           {{ loading ? '生成中...' : '生成试卷' }}
         </button>
 
+        <label class="paper-checkbox">
+          <input
+            :checked="preferDiagram"
+            type="checkbox"
+            @change="$emit('update:preferDiagram', ($event.target as HTMLInputElement).checked)"
+          />
+          优先生成带图几何题
+        </label>
+
         <button class="retry-btn" @click="$emit('export')">
           导出试卷
         </button>
@@ -47,7 +56,7 @@
       <div v-for="(item, index) in paper.questions" :key="index" class="paper-question">
         <h3>第 {{ index + 1 }} 题</h3>
         <p>{{ item.question }}</p>
-        <MathDiagram :question="item.question" />
+        <MathDiagram :question="item.question" :steps="item.steps" />
 
         <h4>答案</h4>
         <p>{{ item.answer }}</p>
@@ -69,6 +78,7 @@ defineProps<{
   knowledgePoint: string
   count: number
   difficulty: string
+  preferDiagram: boolean
   loading: boolean
   paper: GeneratePaperResponse | null
 }>()
@@ -77,6 +87,7 @@ defineEmits<{
   (e: 'update:knowledgePoint', value: string): void
   (e: 'update:count', value: number): void
   (e: 'update:difficulty', value: string): void
+  (e: 'update:preferDiagram', value: boolean): void
   (e: 'generate'): void
   (e: 'export'): void
 }>()
@@ -103,6 +114,15 @@ defineEmits<{
   border-radius: 8px;
   outline: none;
   background: #fff;
+}
+
+.paper-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 4px;
+  color: #31475e;
 }
 
 .paper-input {

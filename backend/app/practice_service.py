@@ -58,7 +58,7 @@ def generate_practice_by_knowledge(knowledge_point: str, count: int = 3):
         "每道题都要包含题目、答案、分步解析。"
     )
 
-    if any(keyword in knowledge_point for keyword in ["几何", "圆", "三角形", "长方形", "矩形", "正方形", "梯形", "坐标"]):
+    if any(keyword in knowledge_point for keyword in ["几何", "圆", "三角形", "长方形", "矩形", "正方形", "梯形", "坐标", "平行四边形"]):
         user_content += (
             " 这些题请优先生成为带明确图形信息的题目："
             "题干中直接写出图形名称、边长、半径、直径、高、角度或坐标，"
@@ -99,7 +99,7 @@ def regenerate_similar_question(source_question: str):
         f"{source_question}"
     )
 
-    if any(keyword in source_question for keyword in ["圆", "扇形", "三角形", "长方形", "矩形", "正方形", "梯形", "坐标"]):
+    if any(keyword in source_question for keyword in ["圆", "扇形", "三角形", "长方形", "矩形", "正方形", "梯形", "坐标", "平行四边形"]):
         user_content += (
             "\n请保留原题的图形类型，并在新题题干中明确写出图形名称和关键尺寸或坐标，"
             "不要使用“如图所示”。"

@@ -239,11 +239,13 @@ export function generatePaper(
   knowledge_point: string,
   count = 10,
   difficulty = "中等",
+  prefer_diagram = false,
 ) {
   return request.post<GeneratePaperResponse>("/generate-paper", {
     knowledge_point,
     count,
     difficulty,
+    prefer_diagram,
   });
 }
 

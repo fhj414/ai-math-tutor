@@ -19,7 +19,7 @@
 
       <h3>题目</h3>
       <p>{{ item.question }}</p>
-      <MathDiagram :question="item.question" />
+      <MathDiagram :question="item.question" :steps="item.steps" />
 
       <h3>答案</h3>
       <p>{{ item.answer }}</p>
@@ -43,6 +43,7 @@
         <MathDiagram
           v-if="regeneratedMap[item.id]?.question"
           :question="regeneratedMap[item.id]?.question ?? ''"
+          :steps="regeneratedMap[item.id]?.steps ?? []"
         />
 
         <h3>答案</h3>

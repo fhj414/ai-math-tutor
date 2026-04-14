@@ -1,5 +1,6 @@
 import os
 import tempfile
+import html
 from dotenv import load_dotenv
 from fastapi import File, UploadFile
 from app.schemas import OCRSolveResponse
@@ -53,6 +54,7 @@ from app.learning_path_service import generate_learning_path
 from app.paper_service import generate_paper
 from app.schemas import GeneratePaperRequest, GeneratePaperResponse
 from fastapi import Query, Depends, HTTPException, File, UploadFile, Form
+from app.diagram_service import parse_paper_payload, render_diagram_html
 
 load_dotenv()
 
@@ -589,8 +591,12 @@ def get_learning_path(
 @app.post("/api/generate-paper", response_model=GeneratePaperResponse)
 def generate_paper_api(req: GeneratePaperRequest):
     try:
-        result = generate_paper(req.knowledge_point, req.count,
-                                req.difficulty)
+        result = generate_paper(
+            req.knowledge_point,
+            req.count,
+            req.difficulty,
+            req.prefer_diagram,
+        )
         return GeneratePaperResponse(**result)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -599,18 +605,27 @@ def export_paper_html(
     knowledge_point: str = Form(...),
     count: int = Form(10),
     difficulty: str = Form("中等"),
+    prefer_diagram: bool = Form(False),
+    paper_payload: str | None = Form(None),
 ):
     try:
-        result = generate_paper(knowledge_point, count, difficulty)
+        result = parse_paper_payload(paper_payload) or generate_paper(
+            knowledge_point,
+            count,
+            difficulty,
+            prefer_diagram,
+        )
 
         questions_html = ""
         for idx, item in enumerate(result["questions"], start=1):
-            steps_html = "".join([f"<li>{step}</li>" for step in item["steps"]])
+            steps_html = "".join([f"<li>{html.escape(step)}</li>" for step in item["steps"]])
+            diagram_html = render_diagram_html(item["question"], item["steps"])
             questions_html += f"""
             <div class="card">
               <h3>第 {idx} 题</h3>
-              <p><strong>题目：</strong>{item['question']}</p>
-              <p><strong>答案：</strong>{item['answer']}</p>
+              <p><strong>题目：</strong>{html.escape(item['question'])}</p>
+              {diagram_html}
+              <p><strong>答案：</strong>{html.escape(item['answer'])}</p>
               <div>
                 <strong>解析：</strong>
                 <ol>{steps_html}</ol>
@@ -655,6 +670,80 @@ def export_paper_html(
               border-radius: 12px;
               padding: 16px;
               margin-bottom: 16px;
+            }}
+            .diagram-card {{
+              margin: 14px 0 18px;
+              padding: 14px;
+              border-radius: 14px;
+              background: linear-gradient(180deg, #f8fbff 0%, #eef6ff 100%);
+              border: 1px solid #dbe8f6;
+            }}
+            .diagram-header {{
+              display: flex;
+              gap: 10px;
+              justify-content: space-between;
+              align-items: center;
+              flex-wrap: wrap;
+            }}
+            .diagram-labels {{
+              display: flex;
+              gap: 8px;
+              flex-wrap: wrap;
+            }}
+            .diagram-tag {{
+              padding: 4px 10px;
+              border-radius: 999px;
+              background: #fff;
+              color: #36506b;
+              font-size: 12px;
+            }}
+            .diagram-svg {{
+              width: 100%;
+              max-width: 320px;
+              height: auto;
+              display: block;
+              margin-top: 12px;
+            }}
+            .shape-fill {{
+              fill: rgba(32, 128, 240, 0.1);
+              stroke: #2080f0;
+              stroke-width: 3;
+            }}
+            .shape-line {{
+              stroke: #f08c00;
+              stroke-width: 3;
+            }}
+            .shape-line.dashed {{
+              stroke-dasharray: 5 4;
+            }}
+            .shape-text {{
+              fill: #22354a;
+              font-size: 14px;
+              font-weight: 700;
+            }}
+            .point-fill {{
+              fill: #f08c00;
+            }}
+            .diagram-notes,
+            .diagram-annotations {{
+              margin-top: 12px;
+              display: grid;
+              gap: 8px;
+            }}
+            .diagram-annotations-title {{
+              font-size: 13px;
+              font-weight: 700;
+              color: #36506b;
+            }}
+            .diagram-note {{
+              padding: 8px 10px;
+              border-radius: 10px;
+              background: rgba(255, 255, 255, 0.88);
+              color: #31475e;
+              font-size: 13px;
+            }}
+            .diagram-note.subtle {{
+              background: rgba(227, 239, 251, 0.9);
             }}
             @media print {{
               body {{

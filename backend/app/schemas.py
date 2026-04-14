@@ -122,6 +122,7 @@ class GeneratePaperRequest(BaseModel):
     knowledge_point: str
     count: int = 10
     difficulty: str = "中等"
+    prefer_diagram: bool = False
 
 
 class GeneratePaperResponse(BaseModel):

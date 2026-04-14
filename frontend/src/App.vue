@@ -215,6 +215,7 @@
   v-model:knowledgePoint="paperKnowledgePoint"
   v-model:count="paperCount"
   v-model:difficulty="paperDifficulty"
+  v-model:preferDiagram="paperPreferDiagram"
   :loading="paperLoading"
   :paper="generatedPaper"
   @generate="handleGeneratePaper"
@@ -351,6 +352,7 @@ const pathLoading = ref(false)
 const paperKnowledgePoint = ref('')
 const paperCount = ref(10)
 const paperDifficulty = ref('中等')
+const paperPreferDiagram = ref(false)
 const paperLoading = ref(false)
 const generatedPaper = ref<GeneratePaperResponse | null>(null)
 
@@ -663,6 +665,7 @@ const handleGeneratePaper = async () => {
       paperKnowledgePoint.value,
       paperCount.value,
       paperDifficulty.value,
+      paperPreferDiagram.value,
     )
     generatedPaper.value = data
   } catch (error: any) {
@@ -689,6 +692,8 @@ const handleExportPaper = async () => {
     knowledge_point: paperKnowledgePoint.value,
     count: String(paperCount.value),
     difficulty: paperDifficulty.value,
+    prefer_diagram: String(paperPreferDiagram.value),
+    paper_payload: generatedPaper.value ? JSON.stringify(generatedPaper.value) : '',
   }
 
   Object.entries(fields).forEach(([key, value]) => {

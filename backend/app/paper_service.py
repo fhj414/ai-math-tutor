@@ -45,7 +45,12 @@ def _clean_json_text(content: str) -> str:
     return content
 
 
-def generate_paper(knowledge_point: str, count: int = 10, difficulty: str = "中等"):
+def generate_paper(
+    knowledge_point: str,
+    count: int = 10,
+    difficulty: str = "中等",
+    prefer_diagram: bool = False,
+):
     client = get_openai_client()
     model_name = get_model_name()
     context = build_context(knowledge_point, top_k=3)
@@ -56,7 +61,14 @@ def generate_paper(knowledge_point: str, count: int = 10, difficulty: str = "中
         "每道题都需要包含题目、答案、分步解析。"
     )
 
-    if any(keyword in knowledge_point for keyword in ["几何", "圆", "三角形", "长方形", "矩形", "正方形", "梯形", "坐标"]):
+    if prefer_diagram:
+        user_content += (
+            " 这份试卷请优先生成适合页面绘制示意图的题目，"
+            "题干中直接写出图形名称和关键尺寸、角度、坐标或对角线信息，"
+            "尽量覆盖圆、三角形、四边形、坐标系等常见图形题。"
+        )
+
+    if any(keyword in knowledge_point for keyword in ["几何", "圆", "三角形", "长方形", "矩形", "正方形", "梯形", "坐标", "平行四边形"]):
         user_content += (
             " 请优先生成能够直接用文字描述图形的题目："
             "在题干中明确写出图形名称，以及边长、半径、直径、高、角度或坐标等关键条件，"

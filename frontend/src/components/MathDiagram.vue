@@ -48,6 +48,23 @@
     </svg>
 
     <svg
+      v-else-if="diagram.type === 'parallelogram'"
+      viewBox="0 0 220 150"
+      class="diagram-svg"
+      aria-label="平行四边形示意图"
+    >
+      <polygon points="62,36 156,36 188,112 94,112" class="shape-fill" />
+      <line x1="62" y1="36" x2="188" y2="112" class="shape-line dashed" />
+      <line x1="156" y1="36" x2="94" y2="112" class="shape-line dashed" />
+      <circle cx="125" cy="74" r="4" class="point-fill" />
+      <text x="56" y="32" class="shape-text">A</text>
+      <text x="158" y="32" class="shape-text">B</text>
+      <text x="190" y="120" class="shape-text">C</text>
+      <text x="84" y="124" class="shape-text">D</text>
+      <text x="131" y="70" class="shape-text">O</text>
+    </svg>
+
+    <svg
       v-else-if="diagram.type === 'rectangle'"
       viewBox="0 0 220 150"
       class="diagram-svg"
@@ -104,6 +121,19 @@
       <text x="28" y="128" class="shape-text">B</text>
       <text x="184" y="128" class="shape-text">C</text>
     </svg>
+
+    <div v-if="diagram.hints.length" class="diagram-notes">
+      <div v-for="hint in diagram.hints" :key="hint" class="diagram-note">
+        {{ hint }}
+      </div>
+    </div>
+
+    <div v-if="diagram.annotations.length" class="diagram-annotations">
+      <div class="diagram-annotations-title">解析标注</div>
+      <div v-for="annotation in diagram.annotations" :key="annotation" class="diagram-note subtle">
+        {{ annotation }}
+      </div>
+    </div>
   </div>
 </template>
 
@@ -113,9 +143,10 @@ import { getDiagramData } from "../utils/mathDiagram";
 
 const props = defineProps<{
   question: string;
+  steps?: string[];
 }>();
 
-const diagram = computed(() => getDiagramData(props.question));
+const diagram = computed(() => getDiagramData(props.question, props.steps ?? []));
 </script>
 
 <style scoped>
@@ -155,6 +186,31 @@ const diagram = computed(() => getDiagramData(props.question));
   height: auto;
   display: block;
   margin-top: 12px;
+}
+
+.diagram-notes,
+.diagram-annotations {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.diagram-annotations-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #36506b;
+}
+
+.diagram-note {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.88);
+  color: #31475e;
+  font-size: 13px;
+}
+
+.diagram-note.subtle {
+  background: rgba(227, 239, 251, 0.9);
 }
 
 .shape-fill {
