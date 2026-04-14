@@ -65,6 +65,10 @@ def get_allowed_origins():
     )
     return [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
 
+
+def get_allowed_origin_regex():
+    return os.getenv("CORS_ORIGIN_REGEX")
+
 with SessionLocal() as db:
     ensure_default_student(db)
 
@@ -73,6 +77,7 @@ app = FastAPI(title="AI Math Tutor API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=get_allowed_origins(),
+    allow_origin_regex=get_allowed_origin_regex(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
